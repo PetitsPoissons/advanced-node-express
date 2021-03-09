@@ -49,8 +49,19 @@ myDB(async (client) => {
       }
     );
 
-  app.route('/profile').get((req, res) => {
-    res.render(process.cwd() + '/views/pug/profile');
+  app.route('/profile').get(ensureAuthenticated, (req, res) => {
+    res.render(process.cwd() + '/views/pug/profile', {
+      username: req.user.username,
+    });
+  });
+
+  app.route('/logout').get((req, res) => {
+    req.logout();
+    res.redirect('/');
+  });
+
+  app.use((req, res, next) => {
+    res.status(404).type('text').send('Not Found');
   });
 
   // save User Id to a cookie
@@ -88,6 +99,13 @@ myDB(async (client) => {
     res.render('pug', { title: e, message: 'Unable to login' });
   });
 });
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/');
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
