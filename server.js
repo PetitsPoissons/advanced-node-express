@@ -44,19 +44,15 @@ myDB(async (client) => {
   });
 
   // retrieve User details based on User Id that was save in the cookie
-  passport
-    .deserializeUser((id, done) => {
-      myDB
-        .collection('users')
-        .findOne({ _id: new ObjectId(id) }, (err, doc) => {
-          done(null, doc);
-        });
-    })
-    .catch((e) => {
-      app.route('/').get((req, res) => {
-        res.render('pug', { title: e, message: 'Unable to login' });
-      });
+  passport.deserializeUser((id, done) => {
+    myDB.collection('users').findOne({ _id: new ObjectId(id) }, (err, doc) => {
+      done(null, doc);
     });
+  });
+}).catch((e) => {
+  app.route('/').get((req, res) => {
+    res.render('pug', { title: e, message: 'Unable to login' });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
