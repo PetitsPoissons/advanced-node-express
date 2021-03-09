@@ -11,8 +11,6 @@ const LocalStrategy = require('passport-local');
 const app = express();
 app.set('view engine', 'pug');
 
-// app.set('views', './views/pug');
-
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
@@ -33,11 +31,26 @@ app.use(passport.session());
 myDB(async (client) => {
   const myDataBase = await client.db('advance-node').collection('users');
 
+  // routes
   app.route('/').get((req, res) => {
     res.render('pug', {
       title: 'Connected to Database',
       message: 'Please login',
+      showLogin: true,
     });
+  });
+
+  app
+    .route('/login')
+    .post(
+      passport.authenticate('local', { failureRedirect: '/' }),
+      (req, res) => {
+        res.redirect('/profile');
+      }
+    );
+
+  app.route('/profile').get((req, res) => {
+    res.render(process.cwd() + '/views/pug/profile');
   });
 
   // save User Id to a cookie
