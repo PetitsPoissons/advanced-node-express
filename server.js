@@ -5,6 +5,7 @@ const session = require('express-session');
 const passport = require('passport');
 const pug = require('pug');
 const myDB = require('./connection');
+const ObjectID = require('mongodb').ObjectID;
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 
 const app = express();
@@ -27,8 +28,35 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.route('/').get((req, res) => {
-  res.render('index', { title: 'Hello', message: 'Please login' });
+myDB(async (client) => {
+  const myDataBase = await client.db('advance-node').collection('users');
+
+  app.route('/').get((req, res) => {
+    res.render('index', {
+      title: 'Connected to Database',
+      message: 'Please login',
+    });
+  });
+
+  // save User Id to a cookie
+  passport.serializeUser((user, done) => {
+    done(null, user._id);
+  });
+
+  // retrieve User details based on User Id that was save in the cookie
+  passport
+    .deserializeUser((id, done) => {
+      myDB
+        .collection('users')
+        .findOne({ _id: new ObjectId(id) }, (err, doc) => {
+          done(null, doc);
+        });
+    })
+    .catch((e) => {
+      app.route('/').get((req, res) => {
+        res.render('pug', { title: e, message: 'Unable to login' });
+      });
+    });
 });
 
 const PORT = process.env.PORT || 3000;
